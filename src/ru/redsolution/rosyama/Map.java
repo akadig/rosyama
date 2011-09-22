@@ -169,8 +169,9 @@ public class Map extends MapActivity implements UpdateListener,
 		switch (view.getId()) {
 		case R.id.search:
 			rosyama.getAddressOperation().cancel();
-			rosyama.getLocationOperation().execute(
-					addressView.getText().toString());
+			if (!addressView.getText().toString().equals(""))
+				rosyama.getLocationOperation().execute(
+						addressView.getText().toString());
 			break;
 		case R.id.done:
 			hole.setAddress(addressView.getText().toString());

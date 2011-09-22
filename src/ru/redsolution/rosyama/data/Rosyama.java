@@ -808,7 +808,7 @@ public class Rosyama extends Application implements UpdateListener,
 		Location process(String... params) throws LocalizedException {
 			String address = params[0];
 			if ("".equals(address))
-				return null;
+				throw new LocalizedException(R.string.data_fail);
 			Element element;
 			try {
 				element = client.getCheckedElement(client.get(String.format(
