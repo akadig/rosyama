@@ -16,7 +16,7 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 public class PDFPreview extends Activity implements OnClickListener,
-		UpdateListener, DialogClickListener, OnCancelListener {
+		UpdateListener, YesNoDialogClickListener, OnCancelListener {
 	/**
 	 * Extra парамент с этим именем должен содержать номер редактируемой ямы.
 	 */
@@ -109,7 +109,7 @@ public class PDFPreview extends Activity implements OnClickListener,
 					rosyama.getSignature(), getString(R.string.signature_hint))
 					.create();
 		case R.id.request:
-			return new DialogBuilder(this, this, R.id.request,
+			return new YesNoDialogBuilder(this, this, R.id.request,
 					getString(R.string.pdf_dialog)).create();
 		default:
 			return null;
@@ -117,13 +117,13 @@ public class PDFPreview extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void onAccept(DialogBuilder dialog) {
+	public void onAccept(YesNoDialogBuilder builder) {
 		String text;
-		if (dialog instanceof EditDialogBuilder)
-			text = ((EditDialogBuilder) dialog).getText();
+		if (builder instanceof EditDialogBuilder)
+			text = ((EditDialogBuilder) builder).getText();
 		else
 			text = null;
-		switch (dialog.getDialogId()) {
+		switch (builder.getDialogId()) {
 		case R.id.to_panel:
 			hole.setTo(text);
 			break;
@@ -143,11 +143,11 @@ public class PDFPreview extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void onDecline(DialogBuilder dialog) {
+	public void onDecline(YesNoDialogBuilder builder) {
 	}
 
 	@Override
-	public void onCancel(DialogBuilder dialog) {
+	public void onCancel(YesNoDialogBuilder builder) {
 	}
 
 	@Override

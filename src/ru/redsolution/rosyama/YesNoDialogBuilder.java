@@ -4,32 +4,38 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
-public class DialogBuilder extends AlertDialog.Builder implements
+/**
+ * Конструктор диалога с кнопками <code>да</code> и <code>нет</code>.
+ * 
+ * @author alexander.ivanov
+ * 
+ */
+public class YesNoDialogBuilder extends AlertDialog.Builder implements
 		DialogInterface.OnDismissListener, DialogInterface.OnClickListener {
 	protected final Activity activity;
 	protected final int dialogId;
-	private final DialogClickListener listener;
+	private final YesNoDialogClickListener listener;
 	private State state;
 
 	private static enum State {
 		/**
-		 * Dialog was canceled.
+		 * Диалог отменен.
 		 */
 		canceled,
 
 		/**
-		 * Request was accepted.
+		 * Утвержден.
 		 */
 		accepted,
 
 		/**
-		 * Request was declined.
+		 * Отвергнут.
 		 */
 		declined,
 	}
 
-	public DialogBuilder(Activity activity, DialogClickListener listener,
-			int dialogId, String message) {
+	public YesNoDialogBuilder(Activity activity,
+			YesNoDialogClickListener listener, int dialogId, String message) {
 		super(activity);
 		this.activity = activity;
 		this.dialogId = dialogId;

@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 
 public class Main extends Activity implements OnClickListener,
-		DialogClickListener, UpdateListener {
+		YesNoDialogClickListener, UpdateListener {
 	/**
 	 * Запрошенный URL.
 	 */
@@ -163,7 +163,7 @@ public class Main extends Activity implements OnClickListener,
 		super.onCreateDialog(id);
 		switch (id) {
 		case DIALOG_CREATE_ID:
-			return new DialogBuilder(this, this, DIALOG_CREATE_ID,
+			return new YesNoDialogBuilder(this, this, DIALOG_CREATE_ID,
 					getString(R.string.hole_create_dialog)).create();
 		default:
 			return null;
@@ -171,9 +171,9 @@ public class Main extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void onAccept(DialogBuilder dialog) {
+	public void onAccept(YesNoDialogBuilder builder) {
 		Intent intent;
-		switch (dialog.getDialogId()) {
+		switch (builder.getDialogId()) {
 		case DIALOG_CREATE_ID:
 			locationManager.requestLocationUpdates(
 					LocationManager.GPS_PROVIDER, 0, 0, rosyama);
@@ -188,11 +188,11 @@ public class Main extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void onDecline(DialogBuilder dialog) {
+	public void onDecline(YesNoDialogBuilder builder) {
 	}
 
 	@Override
-	public void onCancel(DialogBuilder dialog) {
+	public void onCancel(YesNoDialogBuilder builder) {
 	}
 
 	@Override

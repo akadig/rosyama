@@ -23,7 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 public class HoleEdit extends Activity implements OnClickListener,
-		UpdateListener, DialogClickListener, OnItemSelectedListener,
+		UpdateListener, YesNoDialogClickListener, OnItemSelectedListener,
 		OnCancelListener {
 	/**
 	 * Extra парамент с этим именем должен содержать номер редактируемой ямы.
@@ -128,20 +128,20 @@ public class HoleEdit extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void onAccept(DialogBuilder dialog) {
-		switch (dialog.getDialogId()) {
+	public void onAccept(YesNoDialogBuilder builder) {
+		switch (builder.getDialogId()) {
 		case R.id.comment_panel:
-			hole.setComment(((EditDialogBuilder) dialog).getText());
+			hole.setComment(((EditDialogBuilder) builder).getText());
 			break;
 		}
 	}
 
 	@Override
-	public void onDecline(DialogBuilder dialog) {
+	public void onDecline(YesNoDialogBuilder builder) {
 	}
 
 	@Override
-	public void onCancel(DialogBuilder dialog) {
+	public void onCancel(YesNoDialogBuilder builder) {
 	}
 
 	/*

@@ -3,10 +3,10 @@ package ru.redsolution.rosyama;
 import android.app.Activity;
 import android.widget.EditText;
 
-public class EditDialogBuilder extends DialogBuilder {
+public class EditDialogBuilder extends YesNoDialogBuilder {
 	private final EditText editText;
 
-	public EditDialogBuilder(Activity activity, DialogClickListener listener,
+	public EditDialogBuilder(Activity activity, YesNoDialogClickListener listener,
 			int dialogId, String message, String value, String hint) {
 		super(activity, listener, dialogId, message);
 		editText = (EditText) activity.getLayoutInflater().inflate(
