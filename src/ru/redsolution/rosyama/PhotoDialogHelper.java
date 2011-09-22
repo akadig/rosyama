@@ -102,6 +102,8 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 				String[] filePathColumn = { MediaStore.Images.Media.DATA };
 				Cursor cursor = activity.getContentResolver().query(
 						selectedImage, filePathColumn, null, null, null);
+				if (cursor == null)
+					return null;
 				cursor.moveToFirst();
 				String path = cursor.getString(cursor
 						.getColumnIndex(filePathColumn[0]));
@@ -118,12 +120,12 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 	@Override
 	public void onSelect(ItemizedDialogBuilder builder, int selected) {
 		Intent intent;
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
-				0, rosyama);
-		locationManager.requestLocationUpdates(
-				LocationManager.NETWORK_PROVIDER, 0, 0, rosyama);
 		switch (selected) {
 		case SOURCE_MAKE_PHOTO_ID:
+			locationManager.requestLocationUpdates(
+					LocationManager.GPS_PROVIDER, 0, 0, rosyama);
+			locationManager.requestLocationUpdates(
+					LocationManager.NETWORK_PROVIDER, 0, 0, rosyama);
 			requestedUri = Rosyama.getNextJpegUri();
 			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, requestedUri);
@@ -131,11 +133,17 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 					ACTIVITY_CAPTURE_IMAGE_REQUEST_CODE);
 			break;
 		case SOURCE_SELECT_PHOTO_ID:
-			intent = new Intent(
-					Intent.ACTION_PICK,
-					android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-			activity.startActivityForResult(intent,
+			intent = new Intent();
+			intent.setType("image/*");
+			intent.setAction(Intent.ACTION_GET_CONTENT);
+			activity.startActivityForResult(
+					Intent.createChooser(intent, "Select Picture"),
 					ACTIVITY_SELECT_IMAGE_REQUEST_CODE);
+			// intent = new Intent(
+			// Intent.ACTION_PICK,
+			// android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			// activity.startActivityForResult(intent,
+			// ACTIVITY_SELECT_IMAGE_REQUEST_CODE);
 			break;
 		}
 	}
