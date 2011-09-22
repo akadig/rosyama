@@ -4,12 +4,12 @@ import ru.redsolution.rosyama.data.AbstractPhoto;
 import ru.redsolution.rosyama.data.Hole;
 import ru.redsolution.rosyama.data.Rosyama;
 import ru.redsolution.rosyama.data.UpdateListener;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -30,19 +30,14 @@ public class PhotoList extends ListActivity implements UpdateListener,
 	public static final String EXRTA_READ_ONLY = "ru.redsolution.rosyama.EXTRA_READ_ONLY";
 
 	/**
-	 * Запрошенный URL.
-	 */
-	private static final String SAVED_REQUESTED_URI = "SAVED_REQUESTED_URI";
-
-	/**
-	 * Код запроса изображения.
-	 */
-	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 0;
-
-	/**
 	 * Контекстное меню для удаления фотографии.
 	 */
 	private static final int CONTEXT_MENU_DELETE_ID = 0;
+
+	/**
+	 * Диалог с выбором источника фотографии.
+	 */
+	private static final int DIALOG_PHOTO_ID = 1;
 
 	/**
 	 * Приложение.
@@ -60,9 +55,9 @@ public class PhotoList extends ListActivity implements UpdateListener,
 	PhotoAdapter photoAdapter;
 
 	/**
-	 * URL изображения.
+	 * Помошник создания фотографии.
 	 */
-	private Uri requestedUri;
+	private PhotoDialogHelper photoDialogHelper;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -86,13 +81,8 @@ public class PhotoList extends ListActivity implements UpdateListener,
 			registerForContextMenu(listView);
 		}
 
-		requestedUri = null;
-		if (savedInstanceState != null) {
-			String stringUri = savedInstanceState
-					.getString(SAVED_REQUESTED_URI);
-			if (stringUri != null)
-				requestedUri = Uri.parse(stringUri);
-		}
+		photoDialogHelper = new PhotoDialogHelper(this, DIALOG_PHOTO_ID,
+				savedInstanceState);
 
 		photoAdapter = new PhotoAdapter(this, hole);
 		listView.setAdapter(photoAdapter);
@@ -114,20 +104,15 @@ public class PhotoList extends ListActivity implements UpdateListener,
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putString(SAVED_REQUESTED_URI, requestedUri == null ? null
-				: requestedUri.toString());
+		photoDialogHelper.onSaveInstanceState(outState);
 	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-		case CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE:
-			if (resultCode != RESULT_OK)
-				requestedUri = null;
-			else
-				hole.createPhoto(requestedUri);
-			break;
+		Uri uri = photoDialogHelper.getResultUri(requestCode, resultCode, data);
+		if (uri != null) {
+			hole.createPhoto(uri);
 		}
 	}
 
@@ -162,14 +147,9 @@ public class PhotoList extends ListActivity implements UpdateListener,
 
 	@Override
 	public void onClick(View view) {
-		Intent intent;
 		switch (view.getId()) {
 		case R.id.add:
-			// hole.createPhoto(Uri.fromFile(new File("/sdcard/dsc04193.jpg")));
-			requestedUri = Rosyama.getNextJpegUri();
-			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-			intent.putExtra(MediaStore.EXTRA_OUTPUT, requestedUri);
-			startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+			showDialog(DIALOG_PHOTO_ID);
 			break;
 		}
 	}
@@ -205,5 +185,16 @@ public class PhotoList extends ListActivity implements UpdateListener,
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		super.onCreateDialog(id);
+		switch (id) {
+		case DIALOG_PHOTO_ID:
+			return photoDialogHelper.create();
+		default:
+			return null;
+		}
 	}
 }

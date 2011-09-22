@@ -22,6 +22,10 @@
     <string name="hole_list_label">Загруженные дефекты</string>
     <string name="logout">Выйти</string>
 
+    <string name="photo_source">Что вы хотите сделать?</string>
+    <string name="make_photo">Сфотографировать</string>
+    <string name="select_photo">Выбрать из галереи</string>
+
 <!-- Редактирование дефекта -->
     <string name="hole_edit_title">Редактирование дефекта</string>
     <string name="address_label">Адрес дефекта</string>

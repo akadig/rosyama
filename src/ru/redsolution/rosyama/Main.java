@@ -4,12 +4,9 @@ import ru.redsolution.rosyama.data.Rosyama;
 import ru.redsolution.rosyama.data.UpdateListener;
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,19 +15,14 @@ import android.view.View.OnClickListener;
 public class Main extends Activity implements OnClickListener,
 		YesNoDialogClickListener, UpdateListener {
 	/**
-	 * Запрошенный URL.
-	 */
-	private static final String SAVED_REQUESTED_URI = "SAVED_REQUESTED_URI";
-
-	/**
-	 * Код запроса изображения.
-	 */
-	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 0;
-
-	/**
 	 * Диалог с сообщением перед созданием дефекта.
 	 */
 	private static final int DIALOG_CREATE_ID = 0;
+
+	/**
+	 * Диалог с выбором источника фотографии.
+	 */
+	private static final int DIALOG_PHOTO_ID = 1;
 
 	/**
 	 * Выход из текущей сессии.
@@ -48,32 +40,21 @@ public class Main extends Activity implements OnClickListener,
 	private Rosyama rosyama;
 
 	/**
-	 * URL изображения.
+	 * Помошник создания фотографии.
 	 */
-	private Uri requestedUri;
-
-	/**
-	 * Менеджер местоположения.
-	 */
-	private LocationManager locationManager;
+	private PhotoDialogHelper photoDialogHelper;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		rosyama = (Rosyama) getApplication();
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 		findViewById(R.id.create).setOnClickListener(this);
 		findViewById(R.id.list).setOnClickListener(this);
 
-		requestedUri = null;
-		if (savedInstanceState != null) {
-			String stringUri = savedInstanceState
-					.getString(SAVED_REQUESTED_URI);
-			if (stringUri != null)
-				requestedUri = Uri.parse(stringUri);
-		}
+		photoDialogHelper = new PhotoDialogHelper(this, DIALOG_PHOTO_ID,
+				savedInstanceState);
 	}
 
 	@Override
@@ -95,24 +76,17 @@ public class Main extends Activity implements OnClickListener,
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putString(SAVED_REQUESTED_URI, requestedUri == null ? null
-				: requestedUri.toString());
+		photoDialogHelper.onSaveInstanceState(outState);
 	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-		case CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE:
-			locationManager.removeUpdates(rosyama);
-			if (resultCode != RESULT_OK)
-				requestedUri = null;
-			else {
-				rosyama.createHole(requestedUri);
-				Intent intent = new Intent(this, HoleEdit.class);
-				startActivity(intent);
-			}
-			break;
+		Uri uri = photoDialogHelper.getResultUri(requestCode, resultCode, data);
+		if (uri != null) {
+			rosyama.createHole(uri);
+			Intent intent = new Intent(this, HoleEdit.class);
+			startActivity(intent);
 		}
 	}
 
@@ -147,9 +121,6 @@ public class Main extends Activity implements OnClickListener,
 		switch (v.getId()) {
 		case R.id.create:
 			showDialog(DIALOG_CREATE_ID);
-			// rosyama.createHole(Uri.fromFile(new File("/sdcard/test.jpg")));
-			// intent = new Intent(this, HoleEdit.class);
-			// startActivity(intent);
 			break;
 		case R.id.list:
 			intent = new Intent(this, HoleList.class);
@@ -165,6 +136,8 @@ public class Main extends Activity implements OnClickListener,
 		case DIALOG_CREATE_ID:
 			return new YesNoDialogBuilder(this, this, DIALOG_CREATE_ID,
 					getString(R.string.hole_create_dialog)).create();
+		case DIALOG_PHOTO_ID:
+			return photoDialogHelper.create();
 		default:
 			return null;
 		}
@@ -172,17 +145,9 @@ public class Main extends Activity implements OnClickListener,
 
 	@Override
 	public void onAccept(YesNoDialogBuilder builder) {
-		Intent intent;
 		switch (builder.getDialogId()) {
 		case DIALOG_CREATE_ID:
-			locationManager.requestLocationUpdates(
-					LocationManager.GPS_PROVIDER, 0, 0, rosyama);
-			locationManager.requestLocationUpdates(
-					LocationManager.NETWORK_PROVIDER, 0, 0, rosyama);
-			requestedUri = Rosyama.getNextJpegUri();
-			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-			intent.putExtra(MediaStore.EXTRA_OUTPUT, requestedUri);
-			startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+			showDialog(DIALOG_PHOTO_ID);
 			break;
 		}
 	}
