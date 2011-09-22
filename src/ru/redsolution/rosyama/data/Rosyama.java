@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -100,7 +102,7 @@ public class Rosyama extends Application implements UpdateListener,
 	/**
 	 * Клиент для http соединения.
 	 */
-	private Client client;
+	private final Client client;
 
 	/**
 	 * Системные настройки.
@@ -115,7 +117,7 @@ public class Rosyama extends Application implements UpdateListener,
 	/**
 	 * Список дефектов.
 	 */
-	private ArrayList<Hole> holes;
+	private final ArrayList<Hole> holes;
 
 	/**
 	 * Авторизация.
@@ -156,6 +158,52 @@ public class Rosyama extends Application implements UpdateListener,
 	 * Получение координат.
 	 */
 	private final LocationOperation locationOperation;
+
+	/**
+	 * Конструктор для ExifInterface.
+	 */
+	private static Constructor<?> exifConstructor;
+
+	/**
+	 * Метод getLatLong класса ExifInterface.
+	 */
+	private static Method getLatLong;
+
+	static {
+		try { // ExifInterface появился в API 5
+			Class<?> ExifInterface = Class
+					.forName("android.media.ExifInterface");
+			exifConstructor = ExifInterface.getConstructor(String.class);
+			getLatLong = ExifInterface.getMethod("getLatLong",
+					new Class[] { float[].class });
+		} catch (Exception e) {
+			exifConstructor = null;
+			getLatLong = null;
+		}
+	}
+
+	/**
+	 * Получает местоположение из Exif-а изображения.
+	 * 
+	 * @param path
+	 * @return
+	 */
+	private static Location getExifLocation(String path) {
+		if (exifConstructor == null)
+			return null;
+		float[] values = new float[] { 0, 0 };
+		try {
+			if (!(Boolean) getLatLong.invoke(exifConstructor.newInstance(path),
+					values))
+				return null;
+		} catch (Exception e) {
+			return null;
+		}
+		Location location = new Location(LocationManager.GPS_PROVIDER);
+		location.setLatitude(values[0]);
+		location.setLongitude(values[1]);
+		return location;
+	}
 
 	public Rosyama() {
 		client = new Client(this);
@@ -229,25 +277,29 @@ public class Rosyama extends Application implements UpdateListener,
 	 *            Путь до фотографии.
 	 */
 	public void createHole(Uri path) {
-		// Получение гео данных
-		Location gps = ((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-				.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		Location net = ((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		Location location = net;
-		// Определение лучших данных
-		if (gps != null && net != null) {
-			if (gps.getTime() > net.getTime())
-				location = gps;
-			else if (net.hasAccuracy()) {
-				float[] results = new float[1];
-				Location.distanceBetween(net.getLatitude(), net.getLongitude(),
-						gps.getLatitude(), gps.getLongitude(), results);
-				if (results[0] < net.getAccuracy())
+		// Получение местоположение из exif-а изображения.
+		Location location = getExifLocation(path.getPath());
+		if (location == null) {
+			// Получение гео данных из системы.
+			Location gps = ((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+					.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			Location net = ((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+					.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			// Определение лучших данных.
+			if (gps != null && net != null) {
+				if (gps.getTime() > net.getTime())
 					location = gps;
-			}
-		} else if (net == null)
-			location = gps;
+				else if (net.hasAccuracy()) {
+					float[] results = new float[1];
+					Location.distanceBetween(net.getLatitude(),
+							net.getLongitude(), gps.getLatitude(),
+							gps.getLongitude(), results);
+					if (results[0] < net.getAccuracy())
+						location = gps;
+				}
+			} else if (net == null)
+				location = gps;
+		}
 		// Удаление неотправленного дефекта.
 		Hole hole = getHole(null);
 		if (hole != null)
