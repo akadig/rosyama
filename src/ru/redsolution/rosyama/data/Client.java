@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -79,7 +80,7 @@ public class Client {
 	/**
 	 * Фабрика для DOM парсера.
 	 */
-	private DocumentBuilderFactory documentBuilderFactory;
+	private final DocumentBuilderFactory documentBuilderFactory;
 
 	public Client(Rosyama rosyama) {
 		this.rosyama = rosyama;
@@ -144,11 +145,12 @@ public class Client {
 	 *            Содержит имена аргументов и их значения.
 	 * @return
 	 */
-	private HttpEntity getPostEntity(Map<String, String> form) {
+	private HttpEntity getPostEntity(Map<String, List<String>> form) {
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-		for (Entry<String, String> entry : form.entrySet())
-			nameValuePairs.add(new BasicNameValuePair(entry.getKey(), entry
-					.getValue()));
+		for (Entry<String, List<String>> entry : form.entrySet())
+			for (String value : entry.getValue())
+				nameValuePairs
+						.add(new BasicNameValuePair(entry.getKey(), value));
 		UrlEncodedFormEntity encodedFormEntity;
 		try {
 			encodedFormEntity = new UrlEncodedFormEntity(nameValuePairs,
@@ -170,17 +172,16 @@ public class Client {
 	 *            Содержит имена файлов и путь до файла.
 	 * @return
 	 */
-	private HttpEntity getPostEntity(Map<String, String> form,
+	private HttpEntity getPostEntity(Map<String, List<String>> form,
 			Map<String, String> files) {
 		MultipartEntity multipartEntity = new MultipartEntity(
 				HttpMultipartMode.BROWSER_COMPATIBLE);
 		// Не следует передавать в конструктор boundary и charset.
 		try {
-			for (Entry<String, String> entry : form.entrySet())
-				multipartEntity.addPart(
-						entry.getKey(),
-						new StringBody(entry.getValue(), Charset
-								.forName(HTTP.UTF_8)));
+			for (Entry<String, List<String>> entry : form.entrySet())
+				for (String value : entry.getValue())
+					multipartEntity.addPart(entry.getKey(), new StringBody(
+							value, Charset.forName(HTTP.UTF_8)));
 			for (Entry<String, String> entry : files.entrySet())
 				multipartEntity.addPart(entry.getKey(), new FileBody(new File(
 						entry.getValue()), "image/jpeg"));
@@ -212,6 +213,24 @@ public class Client {
 	}
 
 	/**
+	 * @param form
+	 *            Содержит имена аргументов и одно его значения.
+	 * @return форму с именами и множеством значений.
+	 */
+	public static Map<String, List<String>> createListForm(
+			Map<String, String> form) {
+		if (form == null)
+			return null;
+		Map<String, List<String>> map = new HashMap<String, List<String>>();
+		for (Map.Entry<String, String> entry : form.entrySet()) {
+			List<String> list = new ArrayList<String>();
+			list.add(entry.getValue());
+			map.put(entry.getKey(), list);
+		}
+		return map;
+	}
+
+	/**
 	 * Отправляет POST запрос и возвращает прочитанный контент. Не забудьте
 	 * вызвать {@link #consumeEntity(HttpEntity)} после использования контента.
 	 * 
@@ -226,7 +245,7 @@ public class Client {
 	 * @return
 	 * @throws LocalizedException
 	 */
-	public HttpEntity post(String uri, Map<String, String> form,
+	public HttpEntity post(String uri, Map<String, List<String>> form,
 			Map<String, String> files) throws LocalizedException {
 		HttpPost request = new HttpPost(uri);
 		HttpEntity postEntity;

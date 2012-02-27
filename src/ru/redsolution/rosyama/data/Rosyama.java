@@ -452,7 +452,7 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("login", params[0]);
 			form.put("password", params[1]);
 			client.getCheckedElement(client.post(Rosyama.XML_HOST
-					+ "/authorize/", form, null));
+					+ "/authorize/", Client.createListForm(form), null));
 			return new LoginAndPassword(params[0], params[1]);
 		}
 
@@ -527,8 +527,8 @@ public class Rosyama extends Application implements UpdateListener,
 				uri = XML_HOST + "/add/";
 			else
 				uri = String.format(XML_HOST + "/my/%s/update/", hole.getId());
-			Element element = client.getCheckedElement(client.post(uri, form,
-					files));
+			Element element = client.getCheckedElement(client.post(uri,
+					Client.createListForm(form), files));
 			NodeList nodeList = element.getElementsByTagName("callresult");
 			if (nodeList.getLength() != 1)
 				throw new LocalizedException(R.string.hole_fail);
@@ -544,7 +544,8 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("login", getLogin());
 			form.put("password", getPassword());
 			element = client.getCheckedElement(client.post(
-					String.format(XML_HOST + "/my/%s/", id), form, null));
+					String.format(XML_HOST + "/my/%s/", id),
+					Client.createListForm(form), null));
 			for (Element holeElement : new ElementIterable(
 					element.getElementsByTagName("hole")))
 				return new HoleAndHole(hole, parseHole(holeElement));
@@ -594,7 +595,7 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("password", getPassword());
 			client.getCheckedElement(client.post(
 					String.format(XML_HOST + "/my/%s/delete/", hole.getId()),
-					form, null));
+					Client.createListForm(form), null));
 			return hole;
 		}
 
@@ -627,7 +628,7 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("login", getLogin());
 			form.put("password", getPassword());
 			Element element = client.getCheckedElement(client.post(XML_HOST
-					+ "/my/", form, null));
+					+ "/my/", Client.createListForm(form), null));
 			for (Element hole : new ElementIterable(
 					element.getElementsByTagName("hole")))
 				holes.add(parseHole(hole));
@@ -664,7 +665,7 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("password", getPassword());
 			Element element = client.getCheckedElement(client.post(
 					String.format(XML_HOST + "/my/%s/getgibddhead/",
-							hole.getId()), form, null));
+							hole.getId()), Client.createListForm(form), null));
 			NodeList nodeList = element.getElementsByTagName("gibddhead");
 			if (nodeList.getLength() != 1)
 				throw new LocalizedException(R.string.head_fail);
@@ -722,7 +723,7 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("signature", getSignature());
 			HttpEntity entity = client
 					.post(String.format(XML_HOST + "/my/%s/pdf_gibdd/",
-							hole.getId()), form, null);
+							hole.getId()), Client.createListForm(form), null);
 			file = new File(Environment.getExternalStorageDirectory(),
 					hole.getId() + ".pdf");
 			FileOutputStream stream;
