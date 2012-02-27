@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.w3c.dom.Element;
@@ -80,8 +81,8 @@ public class Rosyama extends Application implements UpdateListener,
 
 	static {
 		if (DEBUG) {
-			XML_HOST = "http://xml-st1234.greensight.ru";
-			WEB_HOST = "http://st1234.greensight.ru";
+			XML_HOST = "http://xml.dev.rosyama.ru";
+			WEB_HOST = "http://dev.rosyama.ru";
 		} else {
 			XML_HOST = "http://xml.rosyama.ru";
 			WEB_HOST = "http://rosyama.ru";
@@ -503,19 +504,12 @@ public class Rosyama extends Application implements UpdateListener,
 			form.put("longitude", getPoint(location.getLongitude()));
 			form.put("comment", hole.getComment());
 			form.put("type", hole.getType().toString());
-			StringBuffer delete = null;
-			for (RemotePhoto remotePhoto : hole.getPhotosToRemove()) {
-				List<String> segments = remotePhoto.getUri().getPathSegments();
-				if (segments.isEmpty())
-					continue;
-				String value = segments.get(segments.size() - 1);
-				if (delete == null)
-					delete = new StringBuffer(value);
-				else
-					delete.append(",").append(value);
-			}
-			if (delete != null)
-				form.put("deletefiles", delete.toString());
+			Map<String, List<String>> listForm = Client.createListForm(form);
+			List<String> delete = new ArrayList<String>();
+			for (RemotePhoto remotePhoto : hole.getPhotosToRemove())
+				delete.add(remotePhoto.getId());
+			if (!delete.isEmpty())
+				listForm.put("deletefiles[]", delete);
 			HashMap<String, String> files = new HashMap<String, String>();
 			int index = 0;
 			for (LocalPhoto photo : hole.getPhotosToSend()) {
@@ -528,7 +522,7 @@ public class Rosyama extends Application implements UpdateListener,
 			else
 				uri = String.format(XML_HOST + "/my/%s/update/", hole.getId());
 			Element element = client.getCheckedElement(client.post(uri,
-					Client.createListForm(form), files));
+					listForm, files));
 			NodeList nodeList = element.getElementsByTagName("callresult");
 			if (nodeList.getLength() != 1)
 				throw new LocalizedException(R.string.hole_fail);
@@ -957,6 +951,7 @@ public class Rosyama extends Application implements UpdateListener,
 		String datecreated = null;
 		String commentfresh = null;
 		ArrayList<String> original = new ArrayList<String>();
+		ArrayList<String> ids = new ArrayList<String>();
 		ArrayList<String> small = new ArrayList<String>();
 		for (Element property : new ElementIterable(hole.getChildNodes())) {
 			if ("latitude".equals(property.getTagName()))
@@ -986,8 +981,11 @@ public class Rosyama extends Application implements UpdateListener,
 					for (Element fresh : new ElementIterable(
 							group.getElementsByTagName("fresh")))
 						for (Element src : new ElementIterable(
-								fresh.getElementsByTagName("src")))
+								fresh.getElementsByTagName("src"))) {
+							if ("original".equals(group.getTagName()))
+								ids.add(src.getAttribute("id"));
 							current.add(Client.getTextContent(src));
+						}
 				}
 		}
 
@@ -1024,7 +1022,7 @@ public class Rosyama extends Application implements UpdateListener,
 		for (int index = 0; index < original.size(); index++)
 			photos.add(new RemotePhoto(Rosyama.this, Uri.parse(WEB_HOST
 					+ original.get(index)), Uri.parse(WEB_HOST
-					+ small.get(index))));
+					+ small.get(index)), ids.get(index)));
 
 		if (datecreated == null)
 			throw new LocalizedException(R.string.data_fail);

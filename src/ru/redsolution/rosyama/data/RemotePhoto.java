@@ -15,22 +15,28 @@ public class RemotePhoto extends AbstractPhoto {
 	/**
 	 * Адрес изображения с оригинальным разрешением.
 	 */
-	private Uri original;
+	private final Uri original;
 
 	/**
 	 * Адрес изображения с низким разрешением.
 	 */
-	private Uri small;
+	private final Uri small;
+
+	/**
+	 * Идентификатор изображения на сервере.
+	 */
+	private final String id;
 
 	/**
 	 * Нужно ли удалять изображение с сервера.
 	 */
 	private boolean toRemove;
 
-	public RemotePhoto(Rosyama rosyama, Uri original, Uri small) {
+	public RemotePhoto(Rosyama rosyama, Uri original, Uri small, String id) {
 		super(rosyama);
 		this.original = original;
 		this.small = small;
+		this.id = id;
 		toRemove = false;
 	}
 
@@ -48,6 +54,13 @@ public class RemotePhoto extends AbstractPhoto {
 	 */
 	public boolean isToRemove() {
 		return toRemove;
+	}
+
+	/**
+	 * @return Идентификатор изображения на сервере.
+	 */
+	public String getId() {
+		return id;
 	}
 
 	@Override
