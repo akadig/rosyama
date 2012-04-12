@@ -206,6 +206,8 @@ public class Rosyama extends Application implements UpdateListener,
 		} catch (Exception e) {
 			return null;
 		}
+		if (values[0] == 0 && values[1] == 0)
+			return null;
 		Location location = new Location(LocationManager.GPS_PROVIDER);
 		location.setLatitude(values[0]);
 		location.setLongitude(values[1]);
