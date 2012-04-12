@@ -1,5 +1,6 @@
 bin/*
 gen/*
+distribute/*
 .svn
 *.orig
 .pydevproject
