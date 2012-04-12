@@ -97,6 +97,11 @@ public class Rosyama extends Application implements UpdateListener,
 			+ "/personal/holes.php?register=yes";
 
 	/**
+	 * Интервал обновления локационных данных.
+	 */
+	public static final long LOCATION_UPDATE_INTERVAL = 1000;
+
+	/**
 	 * Размер изображения в предпросмотре.
 	 */
 	public static int IMAGE_PREVIEW_SIZE;

@@ -141,8 +141,8 @@ public class Map extends MapActivity implements UpdateListener,
 		super.onResume();
 		((Rosyama) getApplication()).setUpdateListener(this);
 		myLocationOverlay.enableCompass();
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
-				0, rosyama);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+				Rosyama.LOCATION_UPDATE_INTERVAL, 0, rosyama);
 	}
 
 	@Override

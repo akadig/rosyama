@@ -123,9 +123,11 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 		switch (selected) {
 		case SOURCE_MAKE_PHOTO_ID:
 			locationManager.requestLocationUpdates(
-					LocationManager.GPS_PROVIDER, 0, 0, rosyama);
+					LocationManager.GPS_PROVIDER,
+					Rosyama.LOCATION_UPDATE_INTERVAL, 0, rosyama);
 			locationManager.requestLocationUpdates(
-					LocationManager.NETWORK_PROVIDER, 0, 0, rosyama);
+					LocationManager.NETWORK_PROVIDER,
+					Rosyama.LOCATION_UPDATE_INTERVAL, 0, rosyama);
 			requestedUri = Rosyama.getNextJpegUri();
 			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, requestedUri);
