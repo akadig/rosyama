@@ -4,10 +4,8 @@ import java.io.File;
 
 import ru.redsolution.rosyama.data.Rosyama;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -47,16 +45,6 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 	private static final int ACTIVITY_SELECT_IMAGE_REQUEST_CODE = 1;
 
 	/**
-	 * Приложение.
-	 */
-	private final Rosyama rosyama;
-
-	/**
-	 * Менеджер местоположения.
-	 */
-	private final LocationManager locationManager;
-
-	/**
 	 * URL изображения.
 	 */
 	private Uri requestedUri;
@@ -67,9 +55,6 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 				.getString(R.string.photo_source), new String[] {
 				activity.getString(R.string.make_photo),
 				activity.getString(R.string.select_photo), });
-		rosyama = (Rosyama) activity.getApplication();
-		locationManager = (LocationManager) activity
-				.getSystemService(Context.LOCATION_SERVICE);
 		requestedUri = null;
 		if (savedInstanceState != null) {
 			String stringUri = savedInstanceState
@@ -88,7 +73,6 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 	public Uri getResultUri(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		case ACTIVITY_CAPTURE_IMAGE_REQUEST_CODE:
-			locationManager.removeUpdates(rosyama);
 			if (resultCode != Activity.RESULT_OK)
 				requestedUri = null;
 			else {
@@ -122,12 +106,6 @@ public class PhotoDialogHelper extends ItemizedDialogBuilder implements
 		Intent intent;
 		switch (selected) {
 		case SOURCE_MAKE_PHOTO_ID:
-			locationManager.requestLocationUpdates(
-					LocationManager.GPS_PROVIDER,
-					Rosyama.LOCATION_UPDATE_INTERVAL, 0, rosyama);
-			locationManager.requestLocationUpdates(
-					LocationManager.NETWORK_PROVIDER,
-					Rosyama.LOCATION_UPDATE_INTERVAL, 0, rosyama);
 			requestedUri = Rosyama.getNextJpegUri();
 			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, requestedUri);

@@ -5,6 +5,7 @@ import ru.redsolution.rosyama.data.UpdateListener;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -40,15 +41,23 @@ public class Main extends Activity implements OnClickListener,
 	private Rosyama rosyama;
 
 	/**
+	 * Менеджер местоположения.
+	 */
+	private LocationManager locationManager;
+
+	/**
 	 * Помошник создания фотографии.
 	 */
 	private PhotoDialogHelper photoDialogHelper;
+
+	private boolean resultRequested;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		rosyama = (Rosyama) getApplication();
+		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
 		findViewById(R.id.create).setOnClickListener(this);
 		findViewById(R.id.list).setOnClickListener(this);
@@ -60,6 +69,10 @@ public class Main extends Activity implements OnClickListener,
 	@Override
 	protected void onResume() {
 		super.onResume();
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+				0, rosyama);
+		locationManager.requestLocationUpdates(
+				LocationManager.NETWORK_PROVIDER, 1000, 0, rosyama);
 		rosyama.setUpdateListener(this);
 		InterfaceUtilities.setTiledBackground(this, R.id.background,
 				R.drawable.background);
@@ -71,6 +84,8 @@ public class Main extends Activity implements OnClickListener,
 	protected void onPause() {
 		super.onPause();
 		rosyama.setUpdateListener(null);
+		if (!resultRequested)
+			locationManager.removeUpdates(rosyama);
 	}
 
 	@Override
@@ -80,8 +95,16 @@ public class Main extends Activity implements OnClickListener,
 	}
 
 	@Override
+	public void startActivityForResult(Intent intent, int requestCode) {
+		super.startActivityForResult(intent, requestCode);
+		if (requestCode != -1)
+			resultRequested = true;
+	}
+
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		resultRequested = false;
 		Uri uri = photoDialogHelper.getResultUri(requestCode, resultCode, data);
 		if (uri != null) {
 			rosyama.createHole(uri);
