@@ -48,10 +48,12 @@ import android.content.Context;
  * 
  */
 public class Client {
+
 	/**
 	 * Писать заголовки запросов в catlog.
 	 */
 	public static final boolean LOG = Rosyama.DEBUG;
+
 	/**
 	 * Писать запросы и ответы в файлы.
 	 */

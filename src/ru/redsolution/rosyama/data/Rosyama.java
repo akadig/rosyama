@@ -41,8 +41,9 @@ import android.preference.PreferenceManager;
  */
 public class Rosyama extends Application implements UpdateListener,
 		LocationListener {
+
 	/**
-	 * Писать логи, использовать точку по умолчанию для геокодинга.
+	 * Писать логи, использовать отладочные хосты.
 	 */
 	static final boolean DEBUG = false;
 
